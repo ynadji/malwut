@@ -41,13 +41,13 @@ but good to have nonetheless"
 		     3 (read-lines logfile)))]
     (map #(parse-clamav-line %) malware)))
 
-(defn read-and-save-clamav
+(defn read-and-save
   "Reads Clam AV report, dumps it to a nice DB that Clojure can
 read in easily."
   [logfile dumpdb]
   (spit dumpdb (pr-str (read-clamav logfile))))
 
-(defn load-clamav
+(defn load-malwut-db
   "Read in parsed Clam AV report."
   [dumpdb]
   (read-string (slurp dumpdb)))
