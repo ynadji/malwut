@@ -36,10 +36,12 @@ but good to have nonetheless"
   "Reads report from Clam AV, parses input. Returned
    information can be added to malwut db"
   [logfile]
-  (let [malware (drop-last
+  (let [loglines (drop-last
 		 10 (drop
-		     3 (read-lines logfile)))]
-    (map #(parse-clamav-line %) malware)))
+		     3 (read-lines logfile)))
+        malware (map #(parse-clamav-line %) loglines)
+        md5keys (map :md5 malware)]
+    (zipmap md5keys malware)))
 
 (defn read-and-save
   "Reads Clam AV report, dumps it to a nice DB that Clojure can
