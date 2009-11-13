@@ -3,6 +3,7 @@
                  (:import (org.apache.http.impl.client AbstractHttpClient))
                  (:require [clojure.xml :as xml])
                  (:require [clojure.contrib.zip-filter :as zf])
+                 (:use [clojure.contrib.zip-filter.xml :only (xml-> attr)])
                  (:use [clojure.zip :only (xml-zip node)])
                  (:use clojure.contrib.def))
 
@@ -14,12 +15,8 @@
   `(let [{:keys ~keys} ~http-form]
      ~@forms))
 
-(defn ok? [res]
-  (pr-str res)
-  true)
-
 (defn- check?
-  "Checks both an HTTP status code and a JSON body."
+  "Checks for passing HTTP status code"
   [code content]
   (and (>= code 200)
        (< code 300)))
