@@ -2,8 +2,9 @@
                  (:require [com.twinql.clojure.http :as http])
                  (:import (org.apache.http.impl.client AbstractHttpClient))
                  (:require [clojure.xml :as xml])
-                 (:use clojure.contrib.def)
-                 (:use clojure.contrib.zip-filter.xml))
+                 (:require [clojure.contrib.zip-filter :as zf])
+                 (:use [clojure.zip :only (xml-zip node)])
+                 (:use clojure.contrib.def))
 
 (def *cookie-store* nil)
 
@@ -23,15 +24,6 @@
   (and (>= code 200)
        (< code 300)))
 
-(defn- plog
-  [user pass]
-  (http/post "http://www.offensivecomputing.net/?q=node&destination=node"
-             :query {"edit[name]" user
-                     "edit[pass]" pass
-                     "op" "Log in"
-                     "edit[form_id]" "user_login_block"
-                     }))
-
 (defn login
   "Login to offensivecomputing.net"
   [user pass]
@@ -46,9 +38,9 @@
     [content (.getCookieStore client)]))
 
 (defmacro with-login [[user pass] & body]
+  "Logs in, binds cookie to *cookie-store*."
   `(let [[response# cookie-store#] (login ~user ~pass)]
      (if response#
-       ;; Great!
        (binding [*cookie-store* cookie-store#]
          ~@body)
        (throw (new Exception "Login failed.")))))
@@ -60,10 +52,8 @@
     (http/post "http://www.offensivecomputing.net/?q=ocsearch"
                :as :string
                :cookie-store *cookie-store*
-               :query {
-                       "search" query
-                       "slowsearch" (if slow-search "on" "off")
-                      })))
+               :query {"search" query
+                       "slowsearch" (if slow-search "on" "off")})))
 
 (defn startparse-tagsoup
   "startparse that uses tagsoup"
@@ -71,3 +61,11 @@
   (doto (org.ccil.cowan.tagsoup.Parser.)
     (.setContentHandler ch)
     (.parse s)))
+
+(defn parse
+  "Parse out info from search results."
+  [html]
+  (xml-zip
+   (xml/parse (org.xml.sax.InputSource.
+               (java.io.StringReader. html))
+              startparse-tagsoup)))
