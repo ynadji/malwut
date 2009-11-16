@@ -25,5 +25,5 @@
 
 (defn lookup-by-md5
   "Lookup piece of malware by md5"
-  [malware md5]
-  (get malware md5))
+  [malware & md5s]
+  (map #(get malware %) md5s))
