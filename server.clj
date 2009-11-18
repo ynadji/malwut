@@ -1,5 +1,6 @@
 (clojure.core/ns malwut.server
-                 (:use compojure))
+                 (:use compojure)
+                 (:use malwut.common))
 
 (defroutes my-app
   (GET "/"

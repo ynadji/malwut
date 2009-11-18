@@ -35,6 +35,7 @@ same name and variant number)."
   "Get n samples from the family name"
   [n db & names]
   (let [no-var-dupes (drop-variant-dupes db)]
+    ; this is real messy
     (apply hash-map
            (flatten
             (map
