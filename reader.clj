@@ -13,7 +13,7 @@
   [tag]
   (second tag))
 
-(defn- get-varnum
+(defn- get-variant
   "Get malware variant number (not terribly important
 but good to have nonetheless"
   [tag]
@@ -30,7 +30,7 @@ but good to have nonetheless"
   (let [p (rest (first (re-seq #"(.+?)([a-fA-F0-9]{32}): (.+?) FOUND" line)))
 	tags (re-split #"\.|-" (nth p 2))]
     (struct maltry (get-class tags) (get-name tags) "2010-oakland-malware"
-            (first p) (second p) (set tags) (get-varnum (reverse tags)))))
+            (first p) (second p) (set tags) (get-variant (reverse tags)))))
 
 (defn read-clamav
   "Reads report from Clam AV, parses input. Returned

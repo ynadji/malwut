@@ -1,4 +1,5 @@
 (clojure.core/ns malwut.common
+                 (:use clojure.contrib.seq-utils)
                  (:import [java.io File])
                  (:import [org.apache.commons.io FileUtils]))
 ;;;; Contains common structs to use
@@ -6,12 +7,39 @@
 
 (def classes #{"trojan" "worm" "exploit" "w32" "dialer"})
 
-(defstruct maltry :class :name :project :path :md5 :tags :varnum)
+(defstruct maltry :class :name :project :path :md5 :tags :variant)
+
+;; you should make this lazy
+;; so it's "more" efficient
+(defn- drop-variant-dupes
+  "Drop variant duplicates (samples with different md5s, but the
+same name and variant number)."
+  [db]
+  (loop [unique-var {}
+         malware {}
+         db db]
+    (if (empty? db)
+      malware
+      (let [sample (second (first db))
+            name (.toLowerCase (:name sample))
+            var (:variant sample)
+            ; we want to treat this (even if its empty) as a set
+            var-set (or (get unique-var name) #{})]
+        (if (some #{var} var-set)
+          (recur unique-var malware (rest db))
+          (recur (assoc unique-var name (conj var-set var))
+                 (assoc malware (:md5 sample) sample)
+                 (rest db)))))))
 
 (defn get-n-by-name
   "Get n samples from the family name"
-  [n name db]
-  (take n (filter #(.equalsIgnoreCase name (:name (second %))) db)))
+  [n db & names]
+  (let [no-var-dupes (drop-variant-dupes db)]
+    (apply hash-map
+           (flatten
+            (map
+             #(take n (filter (fn [malware] (.equalsIgnoreCase % (:name (second malware)))) no-var-dupes))
+             names)))))
 
 (defn dump-malware-to-dir
   "Given a list of samples, create a malware directory."
