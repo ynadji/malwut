@@ -2,9 +2,12 @@
                  (:use clojure.contrib.seq-utils)
                  (:import [java.io File])
                  (:import [org.apache.commons.io FileUtils]))
+
+;;;; malware db
+(def db (ref {}))
+
 ;;;; Contains common structs to use
 ;;;; across all of malwut
-
 (def classes #{"trojan" "worm" "exploit" "w32" "dialer"})
 
 (defstruct maltry :class :name :project :path :md5 :tags :variant)
@@ -14,10 +17,10 @@
 (defn- drop-variant-dupes
   "Drop variant duplicates (samples with different md5s, but the
 same name and variant number)."
-  [db]
+  []
   (loop [unique-var {}
          malware {}
-         db db]
+         db @db]
     (if (empty? db)
       malware
       (let [sample (second (first db))
@@ -33,8 +36,8 @@ same name and variant number)."
 
 (defn get-n-by-name
   "Get n samples from the family name"
-  [n db & names]
-  (let [no-var-dupes (drop-variant-dupes db)]
+  [n & names]
+  (let [no-var-dupes (drop-variant-dupes @db)]
     ; this is real messy
     (apply hash-map
            (flatten
@@ -54,5 +57,11 @@ same name and variant number)."
 
 (defn lookup-by-md5
   "Lookup piece of malware by md5"
-  [malware & md5s]
-  (map #(get malware %) md5s))
+  [& md5s]
+  (map #(get @db %) md5s))
+
+(defn update-db
+  "Temporary function until I switch over to using a database."
+  [new-db]
+  (dosync
+   (ref-set db new-db)))
