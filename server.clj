@@ -19,6 +19,7 @@
       thead tr td {
         font-weight: bold;
         background-color: #00ffff;
+    }
     tbody tr.odd  td {
       background-color: #fff;
     }"]]
